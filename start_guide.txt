@@ -1,0 +1,16 @@
+Step 1a: Either create an upgrade DFU zip package containing only the application:
+
+nrfutil pkg generate --hw-version <HW VERSION> --debug-mode --sd-req <SOFTDEVICE ID> --application <APP HEX> <DFU ZIP>
+nrfutil pkg generate --hw-version 52 --sd-req 0xAE --debug-mode --application ble_app_blinky_pca10059_s140.hex dfu.zip
+
+Step 1b: Or create an upgrade DFU zip package containing both the application and SoftDevice:
+
+nrfutil pkg generate --hw-version <HW VERSION> --debug-mode --sd-req 0x00 --sd-id <SOFTDEVICE ID> --application <APP HEX> --softdevice <SD HEX> <DFU ZIP>
+
+nrfutil pkg generate --hw-version 52 --debug-mode --sd-req 0x00 --sd-id 0xAE --application ble_app_blinky_pca10059_s140.hex --softdevice s140_nrf52_6.1.0_softdevice.hex dfu.zip
+
+
+Step 2: Program the zip package:
+
+nrfutil dfu usb-serial -pkg <DFU ZIP> -p <VIRTUAL SERIAL PORT> -b 115200
+nrfutil dfu usb-serial -pkg dfu.zip -p COM60 -b 115200
