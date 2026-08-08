@@ -51,18 +51,18 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "nrf_delay.h"
-#include "boards/promicro_nrf52840.h"
+#include "boards.h"
 #include "nrf_gpio.h"
 
 int main(void)
 {
-    nrf_gpio_cfg_output(LED_PIN);
-    nrf_gpio_cfg_output(LED_PIN8);
+    nrf_gpio_cfg_output(LED_PIN15);
+    nrf_gpio_cfg_output(LED_PIN104);
 
     while (1)
     {
-        nrf_gpio_pin_toggle(LED_PIN);
-        nrf_gpio_pin_toggle(LED_PIN8);
+        nrf_gpio_pin_toggle(LED_PIN15);
+        nrf_gpio_pin_toggle(LED_PIN104);
 
         nrf_delay_ms(10000);
     }

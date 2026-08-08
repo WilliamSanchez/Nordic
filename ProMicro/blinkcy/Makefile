@@ -65,7 +65,7 @@ OPT = -O3 -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
-CFLAGS += -DBOARD_PCA10056
+CFLAGS += -DBOARD_PROMICRO_NRF52840
 CFLAGS += -DBSP_DEFINES_ONLY
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
@@ -111,7 +111,7 @@ nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
 LIB_FILES += -lc -lnosys -lm
 
 
-.PHONY: default help
+.PHONY: default help flash clean
 
 # Default target - first one defined
 default: nrf52840_xxaa
@@ -130,21 +130,12 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-.PHONY: flash erase
+flash:
+	adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application build/nrf52840_xxaa.hex build/dfu-package.zip
+	adafruit-nrfutil dfu serial --package build/dfu-package.zip -p /dev/ttyACM0 -b 115200
 
-# Flash the program
-flash: default
-	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
-	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
-	nrfjprog -f nrf52 --reset
-
-erase:
-	nrfjprog -f nrf52 --eraseall
-
-SDK_CONFIG_FILE := ../config/sdk_config.h
-CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar
-sdk_config:
-	java -jar $(CMSIS_CONFIG_TOOL) $(SDK_CONFIG_FILE)
+clean:
+	rm -rf build
 
 #pip install adafruit-nrfutil
 #adafruit-nrfutil dfu genpkg --dev-type 0x0052 --sd-req 0x0000 --application _build/nrf52840_xxaa.hex _build/dfu.zip
@@ -156,5 +147,5 @@ sdk_config:
 
 #OK
 #
-#adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application _build/nrf52840_xxaa.hex _build/dfu-package.zip
-#adafruit-nrfutil dfu serial --package _build/dfu-package.zip -p /dev/ttyACM0 -b 115200
+#adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application build/nrf52840_xxaa.hex build/dfu-package.zip
+#adafruit-nrfutil dfu serial --package build/dfu-package.zip -p /dev/ttyACM0 -b 115200

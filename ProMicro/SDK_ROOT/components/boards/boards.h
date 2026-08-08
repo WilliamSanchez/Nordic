@@ -83,6 +83,8 @@
   #include "arduino_primo.h"
 #elif defined (CUSTOM_BOARD_INC)
   #include STRINGIFY(CUSTOM_BOARD_INC.h)
+#elif defined (BOARD_CLONE_PCA10056)
+  #include "clone_pca10056.h"
 #elif defined (BOARD_PROMICRO_NRF52840)
   #include "promicro_nrf52840.h"
 #elif defined(BOARD_CUSTOM)
