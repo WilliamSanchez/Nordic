@@ -56,13 +56,13 @@
 
 int main(void)
 {
-    nrf_gpio_cfg_output(LED_PIN15);
-    nrf_gpio_cfg_output(LED_PIN104);
+    nrf_gpio_cfg_output(LED_1);
+    nrf_gpio_cfg_output(LED_2);
 
     while (1)
     {
-        nrf_gpio_pin_toggle(LED_PIN15);
-        nrf_gpio_pin_toggle(LED_PIN104);
+        nrf_gpio_pin_toggle(LED_1);
+        nrf_gpio_pin_toggle(LED_2);
 
         nrf_delay_ms(10000);
     }

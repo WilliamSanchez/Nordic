@@ -74,7 +74,7 @@
 
 void uart_error_handle(app_uart_evt_t * p_event)
 {
-    nrf_gpio_pin_toggle(LED_2);
+
     if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
     {
         APP_ERROR_HANDLER(p_event->data.error_communication);
@@ -87,12 +87,6 @@ void uart_error_handle(app_uart_evt_t * p_event)
 
 /* When UART is used for communication with the host do not use flow control.*/
 #define UART_HWFC APP_UART_FLOW_CONTROL_DISABLED
-
-static void show_error(void)
-{
-
-    nrf_gpio_pin_toggle(LED_2);
-}
 
     uint8_t * tx_data = (uint8_t *)("\r\nLOOPBACK_TEST\r\n");
     uint8_t   rx_data;
@@ -134,21 +128,20 @@ int main(void)
     // This part of the example is just for testing the loopback .
     while (true)
     {
-        nrf_gpio_pin_toggle(LED_1);
-        nrf_delay_ms(1000);
-            for (uint32_t i = 0; i < MAX_TEST_DATA_BYTES; i++)
-    {
-
-        while (app_uart_put(tx_data[i]) != NRF_SUCCESS);
-
-        nrf_delay_ms(10);
-        err_code = app_uart_get(&rx_data);
-
-        if ((rx_data != tx_data[i]) || (err_code != NRF_SUCCESS))
+        nrf_gpio_pin_toggle(LED_2);
+        nrf_delay_ms(100);
+        for (uint32_t i = 0; i < MAX_TEST_DATA_BYTES; i++)
         {
-            show_error();
+
+            while (app_uart_put(tx_data[i]) != NRF_SUCCESS);
+
+            nrf_delay_ms(10);
+
+            if (app_uart_get(&rx_data) == NRF_SUCCESS)
+            {
+                nrf_gpio_pin_toggle(LED_1);
+            }
         }
-    }
     }
 }
 
