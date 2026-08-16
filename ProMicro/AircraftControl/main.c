@@ -490,6 +490,10 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
 {
     if (p_event->type == NRF_DRV_SAADC_EVT_DONE)
     {
+        static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
+        static uint16_t index = 0;
+        uint32_t ret_val;
+
         nrf_saadc_value_t ch0_value;
         nrf_saadc_value_t ch1_value;
 
@@ -497,6 +501,14 @@ static void saadc_callback(nrf_drv_saadc_evt_t const * p_event)
         ch1_value = p_event->data.done.p_buffer[1];
 
         NRF_LOG_INFO("CH0 = %d, CH1 = %d command = %x", ch0_value, ch1_value, COMMAND);
+        sprintf(data_array,"%d, %d, %x\r\0", ch0_value, ch1_value, COMMAND);
+
+        index  = strlen(data_array);
+        ret_val = ble_nus_c_string_send(&m_ble_nus_c, data_array, index);
+       if ( (ret_val != NRF_ERROR_INVALID_STATE) && (ret_val != NRF_ERROR_RESOURCES) )
+       {
+           APP_ERROR_CHECK(ret_val);
+       }
 
         ret_code_t err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, 2);
         APP_ERROR_CHECK(err_code);
@@ -513,7 +525,16 @@ static void saadc_init(void)
      */
     nrf_drv_saadc_config_t saadc_config = NRF_DRV_SAADC_DEFAULT_CONFIG;
 
-    saadc_config.resolution = NRF_SAADC_RESOLUTION_8BIT;
+/*
+
+    NRF_SAADC_RESOLUTION_8BIT  = SAADC_RESOLUTION_VAL_8bit,  ///< 8 bit resolution.
+    NRF_SAADC_RESOLUTION_10BIT = SAADC_RESOLUTION_VAL_10bit, ///< 10 bit resolution.
+    NRF_SAADC_RESOLUTION_12BIT = SAADC_RESOLUTION_VAL_12bit, ///< 12 bit resolution.
+    NRF_SAADC_RESOLUTION_14BIT = SAADC_RESOLUTION_VAL_14bit  ///< 14 bit resolution.
+
+*/
+
+    saadc_config.resolution = NRF_SAADC_RESOLUTION_12BIT;
     saadc_config.oversample = NRF_SAADC_OVERSAMPLE_DISABLED;
     saadc_config.interrupt_priority = APP_IRQ_PRIORITY_LOW;
 
@@ -571,23 +592,22 @@ void saadc_sampling_event_init(void)
 
     nrf_drv_timer_config_t timer_cfg = NRF_DRV_TIMER_DEFAULT_CONFIG;
     timer_cfg.bit_width = NRF_TIMER_BIT_WIDTH_32;
-//    err_code = nrf_drv_timer_init(&m_timer, &timer_cfg, timer_handler);
-//    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_timer_init(&m_timer, &timer_cfg, timer_handler);
+    APP_ERROR_CHECK(err_code);
+    /* setup m_timer for compare event every 400ms */
+    uint32_t ticks = nrf_drv_timer_ms_to_ticks(&m_timer, 500);
+    nrf_drv_timer_extended_compare(&m_timer, NRF_TIMER_CC_CHANNEL0, ticks, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, false);
+    nrf_drv_timer_enable(&m_timer);
 
-//    /* setup m_timer for compare event every 400ms */
-//    uint32_t ticks = nrf_drv_timer_ms_to_ticks(&m_timer, 500);
-//    nrf_drv_timer_extended_compare(&m_timer, NRF_TIMER_CC_CHANNEL0, ticks, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, false);
-//    nrf_drv_timer_enable(&m_timer);
-//
-//    uint32_t timer_compare_event_addr = nrf_drv_timer_compare_event_address_get(&m_timer, NRF_TIMER_CC_CHANNEL0);
-//    uint32_t saadc_sample_task_addr   = nrf_drv_saadc_sample_task_get();
-//
-//    /* setup ppi channel so that timer compare event is triggering sample task in SAADC */
-//    err_code = nrf_drv_ppi_channel_alloc(&m_ppi_channel);
-//    APP_ERROR_CHECK(err_code);
-//
-//    err_code = nrf_drv_ppi_channel_assign(m_ppi_channel, timer_compare_event_addr, saadc_sample_task_addr);
-//    APP_ERROR_CHECK(err_code);
+    uint32_t timer_compare_event_addr = nrf_drv_timer_compare_event_address_get(&m_timer, NRF_TIMER_CC_CHANNEL0);
+    uint32_t saadc_sample_task_addr   = nrf_drv_saadc_sample_task_get();
+
+    /* setup ppi channel so that timer compare event is triggering sample task in SAADC */
+    err_code = nrf_drv_ppi_channel_alloc(&m_ppi_channel);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_ppi_channel_assign(m_ppi_channel, timer_compare_event_addr, saadc_sample_task_addr);
+    APP_ERROR_CHECK(err_code);
 }
 
 void saadc_sampling_event_enable(void)
@@ -626,8 +646,8 @@ int main(void)
     ret_code_t ret_code = nrf_pwr_mgmt_init();
     APP_ERROR_CHECK(ret_code);
 
-    saadc_sampling_event_init();
-    //saadc_sampling_event_enable();
+//    saadc_sampling_event_init();
+//    saadc_sampling_event_enable();
 
     NRF_LOG_INFO("Two channel SAADC started");
 
@@ -647,17 +667,10 @@ int main(void)
     while (1)
     {
         nrf_gpio_pin_toggle(LED_2);
-        nrf_delay_ms(1000);
-        sprintf(data_array,"%d> Hello\r",cont++);
-        index = strlen(data_array);
-                       do
-                {
-                    ret_val = ble_nus_c_string_send(&m_ble_nus_c, data_array, index);
-                    if ( (ret_val != NRF_ERROR_INVALID_STATE) && (ret_val != NRF_ERROR_RESOURCES) )
-                    {
-                        APP_ERROR_CHECK(ret_val);
-                    }
-                } while (ret_val == NRF_ERROR_RESOURCES);
-        //idle_state_handle();
+        nrf_delay_ms(50);
+        err_code = nrf_drv_saadc_sample();
+        APP_ERROR_CHECK(err_code);
+        nrf_pwr_mgmt_run();
+        NRF_LOG_FLUSH();
     }
 }
