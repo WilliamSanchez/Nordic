@@ -116,13 +116,7 @@ int main(void)
 #endif
       };
 
-    APP_UART_FIFO_INIT(&comm_params,
-                         UART_RX_BUF_SIZE,
-                         UART_TX_BUF_SIZE,
-                         uart_error_handle,
-                         APP_IRQ_PRIORITY_LOWEST,
-                         err_code);
-
+    APP_UART_FIFO_INIT(&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOWEST, err_code);
     APP_ERROR_CHECK(err_code);
 
     // This part of the example is just for testing the loopback .

@@ -1,4 +1,4 @@
-PROJECT_NAME     := blinky_pca10056
+PROJECT_NAME     := saadc_pca10056
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := build
 
@@ -6,15 +6,18 @@ SDK_ROOT := ../SDK_ROOT
 PROJ_DIR := .
 
 $(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
-  LINKER_SCRIPT  := blinky_gcc_nrf52.ld
+  LINKER_SCRIPT  := saadc_gcc_nrf52.ld
 
 # Source files common to all targets
 SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_rtt.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_serial.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_backend_uart.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_default_backends.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
   $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
   $(SDK_ROOT)/components/boards/boards.c \
-  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
   $(SDK_ROOT)/components/libraries/util/app_error.c \
   $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
   $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
@@ -25,12 +28,23 @@ SRC_FILES += \
   $(SDK_ROOT)/external/fprintf/nrf_fprintf.c \
   $(SDK_ROOT)/external/fprintf/nrf_fprintf_format.c \
   $(SDK_ROOT)/components/libraries/memobj/nrf_memobj.c \
+  $(SDK_ROOT)/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c \
   $(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
+  $(SDK_ROOT)/components/libraries/experimental_section_vars/nrf_section_iter.c \
   $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_ppi.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
-  $(SDK_ROOT)/components/libraries/button/app_button.c \
-  $(SDK_ROOT)/components/libraries/timer/app_timer.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_ppi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_saadc.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_timer.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(PROJ_DIR)/main.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
+  $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
   $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
 
 # Include folders common to all targets
@@ -38,8 +52,8 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components \
   $(SDK_ROOT)/modules/nrfx/mdk \
   $(PROJ_DIR) \
+  $(SDK_ROOT)/components/libraries/pwr_mgmt \
   $(SDK_ROOT)/components/libraries/strerror \
-  $(SDK_ROOT)/components/libraries/button \
   $(SDK_ROOT)/components/toolchain/cmsis/include \
   $(SDK_ROOT)/components/libraries/util \
   config \
@@ -49,18 +63,19 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/bsp \
   $(SDK_ROOT)/components/libraries/log \
   $(SDK_ROOT)/modules/nrfx \
-  $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/components/libraries/experimental_section_vars \
-  $(SDK_ROOT)/components/libraries/delay \
-  $(SDK_ROOT)/components/libraries/timer \
-  $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/integration/nrfx/legacy \
+  $(SDK_ROOT)/components/libraries/mutex \
+  $(SDK_ROOT)/components/libraries/delay \
+  $(SDK_ROOT)/integration/nrfx \
   $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd \
-  $(SDK_ROOT)/components/libraries/atomic \
+  $(SDK_ROOT)/external/segger_rtt \
   $(SDK_ROOT)/components/boards \
   $(SDK_ROOT)/components/libraries/memobj \
-  $(SDK_ROOT)/external/fprintf \
+  $(SDK_ROOT)/modules/nrfx/drivers/include \
   $(SDK_ROOT)/components/libraries/log/src \
+  $(SDK_ROOT)/external/fprintf \
+  $(SDK_ROOT)/components/libraries/atomic \
 
 # Libraries common to all targets
 LIB_FILES += \
@@ -79,7 +94,8 @@ CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs
-CFLAGS += -Wall #-Werror
+CFLAGS += -Wall #make -Werror
+CFLAGS += -Wno-array-bounds
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # keep every function in a separate section, this allows linker to discard unused ones
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
@@ -137,22 +153,15 @@ include $(TEMPLATE_PATH)/Makefile.common
 
 $(foreach target, $(TARGETS), $(call define_target, $(target)))
 
+include $(TEMPLATE_PATH)/Makefile.common
+
+$(foreach target, $(TARGETS), $(call define_target,$(target)))
+
+#dfu genpkg --sd-req 0xFFFE --dev-type 0x0052
+
 flash:
-	adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application build/nrf52840_xxaa.hex build/dfu-package.zip
-	adafruit-nrfutil dfu serial --package build/dfu-package.zip -p /dev/ttyACM0 -b 115200
+	adafruit-nrfutil dfu genpkg --sd-req 0xFFFE --dev-type 0x0052 --application build/nrf52840_xxaa.hex build/dfu-package.zip
+	adafruit-nrfutil dfu serial --package build/dfu-package.zip -p /dev/ttyACM0 -b 115200 --singlebank --touch 1200
 
 clean:
 	rm -rf build
-
-#pip install adafruit-nrfutil
-#adafruit-nrfutil dfu genpkg --dev-type 0x0052 --sd-req 0x0000 --application _build/nrf52840_xxaa.hex _build/dfu.zip
-#adafruit-nrfutil --verbose dfu serial --package firmware_package.zip -p /dev/ttyACM0 -b 115200 --singlebank --touch 1200
-# python3 -m venv venv
-# source venv/bin/activate
-# deactivate
-
-
-#OK
-#
-#adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application build/nrf52840_xxaa.hex build/dfu-package.zip
-#adafruit-nrfutil dfu serial --package build/dfu-package.zip -p /dev/ttyACM0 -b 115200

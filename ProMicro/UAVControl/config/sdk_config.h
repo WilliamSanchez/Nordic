@@ -2763,7 +2763,7 @@
 // <e> NRFX_PPI_ENABLED - nrfx_ppi - PPI peripheral allocator
 //==========================================================
 #ifndef NRFX_PPI_ENABLED
-#define NRFX_PPI_ENABLED 0
+#define NRFX_PPI_ENABLED 1
 #endif
 // <e> NRFX_PPI_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
@@ -3565,7 +3565,7 @@
 // <e> NRFX_SAADC_ENABLED - nrfx_saadc - SAADC peripheral driver
 //==========================================================
 #ifndef NRFX_SAADC_ENABLED
-#define NRFX_SAADC_ENABLED 0
+#define NRFX_SAADC_ENABLED 1
 #endif
 // <o> NRFX_SAADC_CONFIG_RESOLUTION  - Resolution
  
@@ -4109,7 +4109,7 @@
 // <e> NRFX_TIMER_ENABLED - nrfx_timer - TIMER periperal driver
 //==========================================================
 #ifndef NRFX_TIMER_ENABLED
-#define NRFX_TIMER_ENABLED 0
+#define NRFX_TIMER_ENABLED 1
 #endif
 // <q> NRFX_TIMER0_ENABLED  - Enable TIMER0 instance
  
@@ -5147,7 +5147,7 @@
  
 
 #ifndef PPI_ENABLED
-#define PPI_ENABLED 0
+#define PPI_ENABLED 1
 #endif
 
 // <e> PWM_ENABLED - nrf_drv_pwm - PWM peripheral driver - legacy layer
@@ -5615,7 +5615,7 @@
 // <e> SAADC_ENABLED - nrf_drv_saadc - SAADC peripheral driver - legacy layer
 //==========================================================
 #ifndef SAADC_ENABLED
-#define SAADC_ENABLED 0
+#define SAADC_ENABLED 1
 #endif
 // <o> SAADC_CONFIG_RESOLUTION  - Resolution
  
@@ -5828,7 +5828,7 @@
 // <e> TIMER_ENABLED - nrf_drv_timer - TIMER periperal driver - legacy layer
 //==========================================================
 #ifndef TIMER_ENABLED
-#define TIMER_ENABLED 0
+#define TIMER_ENABLED 1
 #endif
 // <o> TIMER_DEFAULT_CONFIG_FREQUENCY  - Timer frequency if in Timer mode
  
@@ -5888,7 +5888,7 @@
  
 
 #ifndef TIMER0_ENABLED
-#define TIMER0_ENABLED 0
+#define TIMER0_ENABLED 1
 #endif
 
 // <q> TIMER1_ENABLED  - Enable TIMER1 instance
@@ -8357,33 +8357,6 @@
 
 // </e>
 
-// <e> GPIOTE_ENABLED - nrf_drv_gpiote - GPIOTE peripheral driver - legacy layer
-//==========================================================
-#ifndef GPIOTE_ENABLED
-#define GPIOTE_ENABLED 1
-#endif
-// <o> GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS - Number of lower power input pins 
-#ifndef GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS
-#define GPIOTE_CONFIG_NUM_OF_LOW_POWER_EVENTS 1
-#endif
-
-// <o> GPIOTE_CONFIG_IRQ_PRIORITY  - Interrupt priority
- 
-
-// <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
-// <0=> 0 (highest) 
-// <1=> 1 
-// <2=> 2 
-// <3=> 3 
-// <4=> 4 
-// <5=> 5 
-// <6=> 6 
-// <7=> 7 
-
-#ifndef GPIOTE_CONFIG_IRQ_PRIORITY
-#define GPIOTE_CONFIG_IRQ_PRIORITY 6
-#endif
-
 // <e> GPIOTE_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef GPIOTE_CONFIG_LOG_ENABLED
@@ -10497,7 +10470,7 @@
 // <e> NRF_SDH_BLE_LOG_ENABLED - Enable logging in SoftDevice handler (BLE) module.
 //==========================================================
 #ifndef NRF_SDH_BLE_LOG_ENABLED
-#define NRF_SDH_BLE_LOG_ENABLED 1
+#define NRF_SDH_BLE_LOG_ENABLED 0
 #endif
 // <o> NRF_SDH_BLE_LOG_LEVEL  - Default Severity level
  
@@ -11120,15 +11093,19 @@
 #define NFC_NDEF_MSG_TAG_TYPE 2
 #endif
 
+// </e>
+
+// <e> NFC_NDEF_MSG_PARSER_ENABLED - nfc_ndef_msg_parser - NFC NDEF message parser module
 //==========================================================
-// <q> BUTTON_ENABLED  - Enables Button module
- 
-
-#ifndef BUTTON_ENABLED
-#define BUTTON_ENABLED 1
+#ifndef NFC_NDEF_MSG_PARSER_ENABLED
+#define NFC_NDEF_MSG_PARSER_ENABLED 0
 #endif
-
-// <q> BUTTON_HIGH_ACCURACY_ENABLED  - Enables GPIOTE high accuracy for buttons
+// <e> NFC_NDEF_MSG_PARSER_LOG_ENABLED - Enables logging in the module.
+//==========================================================
+#ifndef NFC_NDEF_MSG_PARSER_LOG_ENABLED
+#define NFC_NDEF_MSG_PARSER_LOG_ENABLED 0
+#endif
+// <o> NFC_NDEF_MSG_PARSER_LOG_LEVEL  - Default Severity level
  
 // <0=> Off 
 // <1=> Error 
